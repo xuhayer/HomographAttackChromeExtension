@@ -49,6 +49,20 @@ chrome.contextMenus.onClicked.addListener((info) => {
   var inp = info.selectionText;
   var unicode;
   var safe = new Boolean(false);
+
+  //create windows notification
+  let m1 ={
+    type:"basic",
+    title:"Possible Homograph Attack Detected",
+    message:"The link was identified as SuSpicious.",
+    iconUrl:"unsafe.png"
+  }
+  let m2 ={
+    type:"basic",
+    title:"Link Safe",
+    message:"The link does not appear to contain SuSpicious characters.",
+    iconUrl:"safe.png"
+  }
   for(const s of inp){
     unicode = s.charCodeAt(0);
     if(unicode>=65 && unicode<=90){
@@ -63,9 +77,10 @@ chrome.contextMenus.onClicked.addListener((info) => {
     }
   }
   if(safe==false){
-    console.log("Unsafe");
+    chrome.notifications.create(m1);
   }
   else{
-    console.log("Safe");
+    chrome.notifications.create(m2);
+
   }
 });
