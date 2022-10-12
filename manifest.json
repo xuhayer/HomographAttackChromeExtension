@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Homograph?",
+  "description": "Alerts user if they are visiting a sketchy site",
+  "version": "1.0",
+  "action": {
+    "default_popup": "hello.html",
+    "default_icon": "lain.png"
+  },
+  "permissions": ["history","tabs","activeTab","scripting","contextMenus"],
+  "background":{
+    "service_worker":"popup.js"
+  },
+  "icons":{
+    "32":"lain.png"
+  }
+}
