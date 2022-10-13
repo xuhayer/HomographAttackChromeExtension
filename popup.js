@@ -1,86 +1,69 @@
 //Creates an event listener to check status of tabs
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  //variable to store pages visited on a domain
-  var visited=0;
-  //Check if the tab is loaded
-  if (changeInfo.status == 'complete'){
-    //get domain name from url
-    var url = new URL(tab.url);
-    //debug output to console
-    console.log(url.hostname);
-    //search from history if domain was visited before by user
-    chrome.history.search({text: url.hostname}, function(data) {
-      //loop through results and increment count
-    data.forEach(function(page) {
-        visited=visited + 1;
-    });
-    //If the user has not visited the domain at least 5 times in the past
-    //User will be alerted to be wary of the site
-    if(visited<5){
-      //Set popup to unsafe
-      chrome.action.setPopup({
-        popup: 'unsafe.html'
-      });
-      chrome.action.setIcon({ path: "unsafe.png" });
-    }
-    else{
-      //set popup to safe
-      chrome.action.setIcon({ path: "safe.png" });
-      chrome.action.setPopup({
-        popup: 'safe.html'
-      });
-
-    }
-  });
-  }
+	var visited=0; //variable to store pages visited on a domain
+	if (changeInfo.status == 'complete') { //Check if the tab is loaded
+		var url = new URL(tab.url); //get domain name from url
+		console.log(url.hostname); //debug output to console
+		chrome.history.search({maxResults: 0, startTime: 0, text: url.hostname}, function(data) { //search from history if domain was visited before by user
+			console.log(data);
+			data.forEach(function(page) { //loop through results and increment count
+				visited += page.visitCount;
+			});
+			if (visited<5) { //if user hasn't visited this site at least 5 times, alert user
+				chrome.action.setPopup({ popup: 'unsafe.html' }); //Set popup to unsafe
+				chrome.action.setIcon({ path: "question.png" });
+			}
+			else { //set popup to safe
+				chrome.action.setIcon({ path: "check.png" });
+				chrome.action.setPopup({ popup: 'safe.html' });
+			}
+		});
+	}
 });
-//create context menu
+
+//Creates an option in the right-click context menu
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id:"Homograph?",
-    "title": "Check link for homograph attack",
-    type:"normal",
-    contexts:["selection"]
-
-  });
+	chrome.contextMenus.create({
+		id:"Homograph?",
+		"title": "Check link for homograph attack",
+		type:"normal",
+		contexts:["selection"]
+	});
 });
-//perform function if clicked context menu item
-chrome.contextMenus.onClicked.addListener((info) => {
-  var inp = info.selectionText;
-  var unicode;
-  var safe = new Boolean(false);
 
-  //create windows notification
-  let m1 ={
-    type:"basic",
-    title:"Possible Homograph Attack Detected",
-    message:"The link was identified as SuSpicious.",
-    iconUrl:"unsafe.png"
-  }
-  let m2 ={
-    type:"basic",
-    title:"Link Safe",
-    message:"The link does not appear to contain SuSpicious characters.",
-    iconUrl:"safe.png"
-  }
-  for(const s of inp){
-    unicode = s.charCodeAt(0);
-    if(unicode>=65 && unicode<=90){
-      safe = true;
-    }
-    else if(unicode>=97 && unicode<=122){
-      safe = true;
-    }
-    else{
-      safe = false;
-      break;
-    }
-  }
-  if(safe==false){
-    chrome.notifications.create(m1);
-  }
-  else{
-    chrome.notifications.create(m2);
+//Check a link for if it has any suspicious characters
+chrome.contextMenus.onClicked.addListener((info) => { //if clicked on the right-click context menu
+	var input = info.selectionText; //the text that was selected when clicked
+	var unicode;
+	var safe = new Boolean(true); //flags if the text is safe or not
 
-  }
+	//Initialise the desktop notifications
+	let m1 = {
+		type:"basic",
+		title:"Possible Homograph Attack Detected",
+		message:"The link was identified as suspicious.",
+		iconUrl:"question.png"
+	}
+	let m2 = {
+		type:"basic",
+		title:"Link Safe",
+		message:"The link does not appear to contain suspicious characters.",
+		iconUrl:"check.png"
+	}
+
+	//Test and create a notification if suspicious or not
+	for (var char = 0; char < input.length; char++) { //Check each individual letter
+		console.log(input[char]);
+		if (!input[char].match(/^[\w;,\/?:@&=+$\-_.!~*'()#]+$/)) { //tests if the letters aren't in alphanumeric characters and URL-regular symbols
+			console.log("Match");
+			safe = false;
+			break;
+		}
+	}
+	if (safe==false) { 
+		chrome.notifications.create(m1);
+	}
+	else {
+		chrome.notifications.create(m2);
+	}
 });
