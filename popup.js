@@ -10,8 +10,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 				visited += page.visitCount;
 			});
 			if (visited<5) { //if user hasn't visited this site at least 5 times, alert user
-				chrome.action.setPopup({ popup: 'unsafe.html' }); //Set popup to unsafe
 				chrome.action.setIcon({ path: "question.png" });
+				chrome.action.setPopup({ popup: 'unsafe.html' }); //Set popup to unsafe
 			}
 			else { //set popup to safe
 				chrome.action.setIcon({ path: "check.png" });
@@ -60,7 +60,7 @@ chrome.contextMenus.onClicked.addListener((info) => { //if clicked on the right-
 			break;
 		}
 	}
-	if (safe==false) { 
+	if (safe==false) {
 		chrome.notifications.create(m1);
 	}
 	else {
